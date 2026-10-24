@@ -22,7 +22,7 @@ const tokens: Tok[] = [
   { addr: 'ETH', sym: 'ETH', dec: 18 },
   { addr: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', sym: 'USDC', dec: 6 },
   { addr: '0xB96CFc6f81F85c58a1eCcDd9eC2aD940E2cb8453', sym: 'AYB', dec: 18 },
-  { addr: '0x5880cD05605A549f1DAb01a53ca61Ee559244bD1', sym: 'GEAR', dec: 18 },
+  { addr: '0x5880cD05605A549f1DAb01a53ca61Ee559244bD1', sym: 'GEAR', dec: 6 },
   { addr: '0x1d1bcd1459259429accde23e24e1782f83e97ba3', sym: 'CAPH', dec: 18 },
 ]
 const $ = (id: string) => document.getElementById(id) as any
