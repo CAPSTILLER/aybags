@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AYB Bag — independent wallet page</title>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+<link rel="stylesheet" href="/src/style.css"></head><body>
+<header><h1>AYB Bag</h1><p class="sub">Your bag's wallet, read straight from Base. No AYB server needed.</p></header>
+<div class="warn"><b>Test with $1 first.</b> The bag's wallet code (BagAccount6551) is <b>not source-verified</b>. Our read of its bytecode shows only the NFT holder (or an agent the holder approves) can move funds, but that isn't proven. Never approve an agent you don't trust.</div>
+<section class="card"><label>Bag token ID <input id="tid" type="number" min="0" value="98" inputmode="numeric"></label><button id="load">Load bag</button>
+<div id="info" class="info">Loading…</div><div id="mig"></div></section>
+<section class="card"><h2>Inside the bag</h2><div id="hold"></div>
+<label>Custom token address <input id="custom" placeholder="0x…"></label><button id="addTok" class="ghost">Add token</button></section>
+<section class="card"><h2>Wallet</h2><button id="connect">Connect wallet (read-only)</button><div id="me" class="small"></div>
+<p class="small">Holder of #98 is capstiller.eth = 0x5559…4507 (not the Bankr wallet).</p></section>
+<section class="card"><h2>Deposit</h2><p class="small">Anyone can deposit. Sends from your connected wallet to the bag's wallet.</p>
+<label>Asset <select id="dAsset"></select></label><label>Amount <input id="dAmt" inputmode="decimal" placeholder="1"></label>
+<button id="dep">Deposit</button><button id="cp" class="ghost">Checkpoint level</button></section>
+<section class="card"><h2>Withdraw</h2><p class="small">Only the current NFT holder can withdraw.</p>
+<label>Asset <select id="wAsset"></select></label><label>Amount <input id="wAmt" inputmode="decimal"></label>
+<label>To <input id="wTo" placeholder="defaults to your wallet"></label><button id="wd" disabled>Withdraw</button></section>
+<div id="status" class="status"></div>
+<section class="card"><h2>Send to play</h2><p class="small">Coming soon: your bag pays the game's entry fee by sending CAPH from its own wallet, and winnings come back to the bag.</p>
+<button disabled>Caphet Arena · coming soon</button><button disabled>Substrate · coming soon</button>
+<p class="small"><a href="https://arena.gearup.wtf" target="_blank" rel="noopener">arena.gearup.wtf</a></p></section>
+<section class="card"><h2>3D bag</h2><div id="model" class="model">Meshy model coming soon<!-- <model-viewer src="/bag.glb" camera-controls auto-rotate></model-viewer> --></div></section>
+<footer><a href="https://landonthis.gearup.wtf" target="_blank" rel="noopener"><img src="/gear-logo-cutout.png" alt="GEAR" height="28"></a><p class="small">Independent page. Not affiliated with AYB. Reads public Base chain.</p></footer>
+<script type="module" src="/src/main.ts"></script></body></html>
