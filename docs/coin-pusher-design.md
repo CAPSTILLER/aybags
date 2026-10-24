@@ -1,128 +1,111 @@
-# AYB Bag Coin Pusher — design (draft, nothing built)
+# AYB Bag Coin Pusher — arcade design (v2, nothing built)
 
-A coin pusher that only AYB bags can play. Bags feed liquid tokens in, get pusher coins, drop them on a stacked shelf, and coins that fall off pay back to the bag's own wallet.
+An **arcade** coin pusher for AYB bags. Bags trade approved tokens for **real GEAR**, push GEAR coins on a stacked shelf, and win GEAR coins (and prize NFTs) that fall into the bin.
 
 Status: design only. No contracts deployed, no transactions sent.
 
 ---
 
-## 1. Pieces
+## 1. Player flow
 
-| Piece | What it does |
+1. **Connect** wallet on aybags (read-only). Page reads the bag: `ownerOf`, live `accountOf(bagId)`.
+2. **Load tokens**: holder signs `bag.sendERC20(token, inboxOf(bagId), amount)` — the bag's own wallet sends approved tokens to its personal inbox.
+3. **Get GEAR**: holder (or anyone) calls `exchange(bagId)`. The contract values the tokens, sends **5% to the house**, and sends **real GEAR** worth the other 95% **to the bag's wallet**.
+4. **Play**: holder signs `bag.sendERC20(GEAR, pusher, coins)` then `drop(bagId, lane, phase)` — or one GEAR load covers many drops (see §5).
+5. **Win**: GEAR coins pushed into the bin are paid as **GEAR to the bag**. A prize NFT pushed into the bin is sent **to the bag**.
+
+## 2. Pieces
+
+| Piece | Job |
 |---|---|
-| **PusherVault** | Holds the prize pile (allow-listed tokens). Credits deposits, pays winnings, takes the 5% house cut. |
-| **PusherGame** | Pile state, drops, randomness, odds, caps. Only it can tell the vault to pay. |
-| **PriceGuard** | Reads Aerodrome pool TWAPs, checks liquidity floors, converts token → GEAR value. |
-| **Frontend (aybags)** | 3D shelf (Three.js / Meshy coin + bag), replays the on-chain result. Never decides outcomes. |
+| **Inbox (per bag)** | Tiny CREATE2 address per bagId. Only receives tokens; `exchange` sweeps it. Stops one bag claiming another's deposit. |
+| **Exchange** | Prices deposits, takes 5%, pays GEAR from the reserve, routes deposited tokens into GEAR liquidity. |
+| **GEAR Reserve** | Holds the GEAR used for exchange + pusher payouts. |
+| **Pusher** | Shelf state, drops, randomness, payouts (GEAR only). |
+| **NFT Dispenser** | Holds prize NFTs, drops them onto the shelf as special pieces. |
+| **Frontend** | 3D shelf (Three.js, Meshy coins/bag/prizes) that replays on-chain results. |
 
-Admin for all three: **Cap's Ledger 0xD838…EAca only** (ideally behind a Safe later). No other keys.
+Admin for everything: **Cap's Ledger 0xD838…EAca only** (Safe later). Timelock on settings; instant pause.
 
-## 2. Who can play: verified bags only
+## 3. Verified bags only
 
-The AYB bag wallet (BagAccount6551) has **no `approve` and no generic `execute`** — only `sendETH`, `sendERC20`, `sendERC721`, `sendERC1155` (+ stake/swap on AYB-listed venues). So the only way in is a **plain token transfer** from the bag to the vault.
+A deposit or drop counts only for `bagId` where the sender/inbox is tied to
+`NFT(0xb0f3dcaf6be094559213089bd14299f5103cf964).accountOf(bagId)`, cross-checked with the ERC-6551 registry (`0x0000…5758`, `bindingOf(bagId)`, chain 8453). No credit while `isMigrating(bagId)`.
 
-A sender counts as a bag only if:
-```
-sender == NFT(0xb0f3dcaf6be094559213089bd14299f5103cf964).accountOf(bagId)
-```
-read live at credit time (handles migrations). Cross-check with the ERC-6551 registry
-(`0x000000006551c19487814612e58FE06813775758.account(impl, salt, 8453, NFT, bagId)` using `bindingOf(bagId)`).
+Why an inbox: the bag wallet has **no `approve` / generic `execute`**, only `sendERC20`/`sendETH`. A plain transfer doesn't tell the receiver who sent it, so each bag gets its own inbox address.
 
-### Detecting a deposit (bag can't call us)
-ERC-20 `transfer` gives the receiver no callback, so the vault can't see *who* sent. Options:
+## 4. Exchange: tokens → GEAR
 
-| Option | How | Verdict |
-|---|---|---|
-| **A. Balance-delta credit** | Holder calls `bag.sendERC20(token, vault, amt)`, then `credit(bagId, token)`. Vault credits `balanceOf(vault) − accounted[token]`. | Simple, but **anyone's stray transfer could be credited to whichever bag calls first.** Also anyone could credit a non-bag's transfer to their bag. ❌ alone |
-| **B. Credit + Transfer proof** | `credit(bagId, token, txHash/logIndex)` checked against a receipt proof. | Heavy on-chain (receipt proofs on L2 are messy). ❌ |
-| **C. Per-bag deposit box (recommended)** | Vault deploys a tiny CREATE2 **inbox per bag** (`inboxOf(bagId)`). Bag sends to its inbox; `credit(bagId)` sweeps the inbox into the vault. Only that bag's holder/bag ever learns to send there; a stranger sending to it just gifts that bag. | ✅ No front-running of value between bags. |
-| **D. Off-chain watcher** | Indexer sees `Transfer(from=bagAccount, to=vault)` and signs a credit. | Works, but trusts a server. Backup only. |
+**Approved tokens** (start): USDC, WETH (ETH wrapped by the inbox), AYB. GEAR/CAPH-adjacent tokens later.
 
-Recommendation: **C**. `credit` checks `msg.sender == ownerOf(bagId)` (or anyone, since value only goes to that bag) and the inbox only holds allow-listed tokens; non-listed tokens can be rescued back to the bag.
+**Pricing**
+- Each token priced in USD via **Aerodrome TWAP** (≥30 min) with spot-vs-TWAP deviation check, **liquidity floor** per pool, **max per tx / per bag per day**.
+- **GEAR itself** is priced from the **GEAR/WETH (or GEAR/USDC) pool TWAP**. This is the weakest link: GEAR's pool depth limits everything. Rules:
+  - If GEAR pool liquidity < floor, exchange pauses.
+  - Exchange size per tx ≤ a small % of GEAR pool depth (e.g. 0.5%).
+  - Use the **less favourable** of TWAP vs spot for the player, so pumping GEAR or the deposit token can't drain the reserve.
+- `GEAR out = value_in × 0.95 ÷ GEAR price`. 5% (in the deposited token) → house treasury.
 
-## 3. Allowed tokens & pricing
+**Where deposited tokens go: liquidity**
+- The 95% of deposited tokens is paired with GEAR from the reserve and **added to Aerodrome GEAR/<token> pools** (GEAR/USDC, GEAR/WETH, GEAR/AYB), creating swap routes for all pairs. Can be done per deposit (gas-heavy) or batched by a keeper/Ledger.
+- **LP positions are owned by Cap's Ledger** (or a Ledger-controlled LP vault contract that can only add liquidity or return LP to the Ledger). The game contracts never hold withdrawable LP.
+- Note: adding liquidity needs GEAR on the other side → it draws on the reserve too. Budget that.
 
-Allow-list (start small): **USDC, WETH (ETH wrapped by the bag first or via sendETH to inbox that wraps), AYB**. Maybe **GEAR, CAPH** later if their pools are deep enough.
+## 5. The pusher (GEAR coins)
 
-PriceGuard per token:
-- **Aerodrome pool TWAP** (≥30 min) vs spot: if they differ > X% (e.g. 3%), deposits pause for that token.
-- **Liquidity floor**: pool must hold ≥ $N (e.g. $50k) of the quote side, else token is disabled.
-- **Max deposit per tx** and **per bag per day** (e.g. $50 / $200) — limits what a manipulator can extract.
-- USDC priced at $1 (with a sanity band), ETH via WETH/USDC pool.
-- Value is **converted to GEAR-equivalent** via the GEAR/WETH (or GEAR/USDC) TWAP.
+- 1 coin = a fixed GEAR amount (e.g. 1,000 GEAR). Loading N coins = sending N × that to the pusher; balance tracked per bagId so many drops can follow one load.
+- **Shelf**: 5 lanes, each with coin count + **edge pressure** (0–100). Coins stack between drops; ripe lanes are visible to all.
+- **Drop**: pick lane + pusher phase. **Skill** (reading pressure, timing) raises the chance of a big push; **randomness** decides exact fall count. Arcade feel: skilled play matters, but nothing is guaranteed.
+- **Bin**: coins that fall are paid in **GEAR to the bag wallet**. Side gutters return nothing (like real pushers) — this is the house edge on play.
+- **Caps**: per-drop max, per-bag daily max, global daily max. **Payout never exceeds the GEAR reserve** (Cap accepts: if reserve runs short, payouts shrink and that's a reserve-management signal).
 
-## 4. House cut
+## 6. NFT Dispenser
 
-On every credit: **5% of the deposited tokens goes straight to the treasury** (same token, same tx). The other 95% joins the prize pile. Treasury address set by Ledger, changes timelocked.
+- **Deposit**: only the Ledger deposits prize NFTs (ERC-721/1155) into the Dispenser.
+- **One at a time**: at most one prize NFT is on the shelf. When it's won (or after a set number of drops with no win, optionally) the next can drop.
+- **When it drops**: chosen by randomness (e.g. after a random 20–80 drops, or a % chance per drop), never by the frontend.
+- **On the shelf**: it's a special piece in a lane with its own edge position; pushes move it like coins.
+- **Win**: when it crosses the edge into the bin, the Dispenser sends that exact NFT to the **pushing bag's wallet**. Gutter = it returns to the dispenser.
+- Ledger can withdraw undrawn NFTs; never one currently on the shelf.
 
-## 5. Pusher coins: internal credits vs real GEAR
+## 7. Anti-cheat
 
-| | Internal credits (recommended) | Real GEAR tokens |
-|---|---|---|
-| What the bag gets | A number in the contract: `coins[bagId]` | GEAR minted/sent to the bag |
-| Needs GEAR supply | No | Yes — someone must fund GEAR inventory |
-| Gas | Cheap | Extra transfers |
-| Resale/abuse | Can't be traded, only played | Can be dumped; becomes a GEAR sell path |
-| Moves with the NFT | Yes (keyed to bagId) | Yes (sits in the bag wallet) |
+- Outcomes computed **on-chain only**; the 3D view just replays.
+- **Commit → reveal**: `drop` records lane/phase and spends the coin; result settles with **Chainlink VRF** or **Pyth Entropy** (what AYB uses). Same-block hash only on testnet.
+- One pending drop per bag; only `ownerOf(bagId)` can drop; rate limits.
+- Shelf state is shared, so outcomes depend on the pile at settle time — no re-rolls.
 
-Recommendation: **internal credits, priced in GEAR value** (1 coin = fixed GEAR amount, e.g. 1,000 GEAR worth). GEAR still gets used as the unit and in payouts if listed, without the game needing a GEAR stockpile.
+## 8. GEAR to bag or player wallet?
 
-## 6. The pusher
+**Recommend: the bag.** Keeps everything tied to the NFT (good for AYB levels/mask), one flow, no mixing with EOAs. The holder can withdraw GEAR any time with `sendERC20` on aybags. Downside: an extra step to use GEAR elsewhere, and if the bag is sold, its GEAR goes with it (frontend warns).
 
-### Pile model (on-chain, simplified)
-- Shelf has **5 lanes**. Each lane stores: coin count and an **edge pressure** value (0–100) = how close the front of that lane is to the drop edge.
-- A drop: player picks a **lane** and a **timing** window (pusher phase 0–9). Neighbouring lanes get a share of the push.
-- Coins pile up between drops (stackable) — a full lane makes pressure rise, so lanes "ripen" for everyone to see.
+## 9. GEAR reserve funding
 
-### Skill + randomness
-- **Skill**: hitting the lane with the highest pressure at the right pusher phase gives a better *chance* (e.g. up to +40% vs a blind drop). Pressure is public, so reading the shelf is the skill.
-- **Randomness** decides how many coins actually fall: `fall = f(pressure, aim bonus, random)`.
-- The frontend animates exactly the on-chain result.
+- Seeded by Cap/Ledger with GEAR (amount TBD).
+- Refilled by: gutter losses on the pusher, a share of LP fees, Ledger top-ups.
+- Dashboard on aybags: reserve balance, GEAR owed per day, pool depths. If reserve < threshold → exchange pauses first (protects payouts).
 
-### Anti-cheat
-- Outcome is **never computed in the browser**.
-- **Commit → reveal**: `drop(bagId, lane, phase)` records the request; randomness comes from **Chainlink VRF on Base** (preferred) or **Pyth Entropy** (AYB already uses it), *not* the same-block hash. A future blockhash fallback is weaker on Base (sequencer can see it) — only for testnet.
-- One pending drop per bag; drop is resolved against pile state **at resolve time** with the coin already spent, so no re-rolling.
-- Rate limits per bag; caller must be `ownerOf(bagId)`.
+## 10. Arcade framing (legal, briefly)
 
-### Odds & sustainability
-- Target **return-to-player ≈ 90%** of coins in over time (house 5% on deposit + ~10% game edge, tunable); simulated before launch (Monte Carlo in repo).
-- **Per-drop cap** (e.g. max 20 coins out), **per-bag daily cap**, **global daily cap**.
-- **Payout ≤ vault**: every payout = min(won, caps, what the vault actually holds). Pile pressure decays if the vault is low.
+Arcade = buy play tokens, skill-influenced play, win play tokens/prizes. But **GEAR is a tradable token with a market price**, so regulators may still see buy-in + chance + valuable prize as gambling. Keep it arcade-like: fixed coin price, visible skill element, prize caps, no "cash out" language, ToS + region note. Not legal advice — worth a quick check before mainnet.
 
-## 7. Payouts
-
-Each coin that falls is worth its GEAR value, paid **split evenly by value across the vault's current token mix** (e.g. pile is 50% USDC / 30% AYB / 20% WETH → payout in that ratio). Sent with plain `transfer` to the **current `accountOf(bagId)`** — never to the player's EOA. Fractional dust stays in the vault.
-
-## 8. Risks
+## 11. Risks
 
 | Risk | Mitigation |
 |---|---|
-| **Oracle manipulation** (pump token, deposit, win more) | TWAP + spot deviation check, liquidity floor, per-tx/day deposit caps, payout in mix not chosen token. |
-| **Solvency** (payouts > pile) | Payout capped by vault balance; daily caps; edge sim; pause switch. |
-| **Bag transferred mid-game** | Credits and pending drops are keyed to `bagId`, winnings go to the bag wallet — the new holder gets them. Frontend warns before selling. Optionally freeze drops for N blocks after a transfer. |
-| **Migration** of a bag's wallet | Always read `accountOf` live; refuse credit while `isMigrating(bagId)`. |
-| **Unverified bag wallet code** | Only uses plain `sendERC20`; still wait for AYB to verify source. |
-| **AYB transfer rule** (7702 wallets can't send the NFT directly) | Doesn't affect play; note for Cap's wallet 0x5559…4507. |
-| **Gas** | Base is cheap; VRF fee per drop (~cents) — charge it in coins or batch drops. |
-| **Admin key** | Ledger only; timelock on token list, odds, treasury; pause is instant. |
-| **Legal** | Wagering on tokens may be gambling in some places — Cap to decide geo/ToS. |
+| Price manipulation (deposit token or GEAR) | TWAP + deviation, liquidity floors, worse-of pricing, per-tx caps tied to GEAR pool depth |
+| Reserve runs dry | Payout ≤ reserve, daily caps, exchange pauses first, dashboard |
+| LP impermanent loss / GEAR sell pressure | Ledger-owned LP, batched adds, monitor |
+| Bag sold mid-game | Balances/pending drops keyed to bagId; winnings go to current `accountOf` |
+| Bag wallet migration | Read `accountOf` live; block while migrating |
+| Unverified bag wallet code | Only uses `sendERC20`; ask AYB to verify |
+| Gas / VRF fees | Base is cheap; fee baked into coin price or batched |
+| Admin key | Ledger only, timelock, pause |
 
-## 9. Open questions for Cap
+## 12. Phased plan
 
-1. Start tokens: USDC + WETH + AYB only, or GEAR/CAPH too?
-2. Coin unit: how much GEAR value per coin? Min/max deposit?
-3. Target return (90%?) and caps (per drop / per day)?
-4. VRF provider: Chainlink VRF or Pyth Entropy (what AYB uses)?
-5. Can bags cash out unused coins (minus fee), or coins are play-only?
-6. Treasury address for the 5% (Ledger, or a separate wallet)?
-7. Is AYB team OK with this / can they verify the bag wallet source?
-8. Gambling/ToS stance and any region limits.
-
-## 10. Phased plan
-
-1. **Design + odds sim** (this doc + Monte Carlo script). Lock numbers.
-2. **Base Sepolia**: mock bag NFT + real 6551 registry, inboxes, PriceGuard with mock pools, VRF on testnet. Foundry tests: fake deposits, manipulated price, insolvency, transfer mid-game.
-3. **3D frontend** on aybags reading testnet state; Meshy bag + coins.
-4. **Mainnet soft launch**: USDC only, tiny caps, Ledger admin, pause ready. Cap tests with $1 from bag #98.
-5. Add AYB/WETH, raise caps after a week of clean data; consider outside review.
+1. Odds + reserve simulation (Monte Carlo) and numbers locked.
+2. **Base Sepolia**: mock bag NFT + real 6551 registry, inboxes, mock GEAR + pools, VRF testnet, Dispenser with test NFTs. Foundry tests for manipulation, reserve exhaustion, bag transfer mid-drop.
+3. 3D pusher on aybags against testnet.
+4. Mainnet soft launch: USDC only, tiny caps, small reserve; Cap's first test from bag #98 with $1.
+5. Add WETH/AYB, LP routing, NFT Dispenser; raise caps after clean data.
