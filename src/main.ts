@@ -31,10 +31,22 @@ const status = (s: string) => ($('status').textContent = s)
 const short = (a: string) => a.slice(0, 6) + '…' + a.slice(-4)
 const row = (k: string, v: string) => `<div><span>${k}</span><b>${v}</b></div>`
 
-function fillSelects() {
-  const o = tokens.map((t, i) => `<option value="${i}">${t.sym}</option>`).join('')
-  $('dAsset').innerHTML = o; $('wAsset').innerHTML = o
+// Tap-friendly token picker (native <select> popups are unreliable in Android wallet in-app browsers).
+const bals: Record<number, bigint | null> = {}
+function picker(id: string, isWithdraw: boolean) {
+  const el = $(id); if (el.value === undefined) el.value = '0'
+  el.innerHTML = tokens.map((t, i) => {
+    const b = bals[i]; const zero = b === 0n
+    const txt = b == null ? '…' : Number(formatUnits(b, t.dec)).toLocaleString(undefined, { maximumFractionDigits: 6 })
+    return `<button type="button" role="radio" data-i="${i}" aria-checked="${el.value == i}" class="opt${el.value == i ? ' on' : ''}${isWithdraw && zero ? ' zero' : ''}">` +
+      `<span>${t.sym}</span><small>${isWithdraw ? (zero ? '0 in bag' : txt + ' in bag') : ''}</small></button>`
+  }).join('')
+  el.querySelectorAll('button').forEach((b: HTMLButtonElement) => b.addEventListener('click', () => {
+    el.value = b.dataset.i!; fillSelects()
+    if (isWithdraw) status(bals[+el.value] === 0n ? `The bag holds 0 ${tokens[+el.value].sym}, nothing to withdraw.` : '')
+  }))
 }
+function fillSelects() { picker('dAsset', false); picker('wAsset', true) }
 async function load() {
   tid = BigInt($('tid').value || 0)
   $('info').textContent = 'Loading…'; $('mig').innerHTML = ''
@@ -65,10 +77,11 @@ async function holdings() {
   const out = await Promise.all(tokens.map(async t => {
     try {
       const b = t.addr === 'ETH' ? await pub.getBalance({ address: bag! }) : await pub.readContract({ address: t.addr, abi: erc20, functionName: 'balanceOf', args: [bag!] })
+      bals[tokens.indexOf(t)] = b
       return row(t.sym, Number(formatUnits(b, t.dec)).toLocaleString(undefined, { maximumFractionDigits: 6 }))
-    } catch { return row(t.sym, 'error') }
+    } catch { bals[tokens.indexOf(t)] = null; return row(t.sym, 'error') }
   }))
-  $('hold').innerHTML = `<div class="info">${out.join('')}</div>`
+  $('hold').innerHTML = `<div class="info">${out.join('')}</div>`; fillSelects()
 }
 async function addToken() {
   const a = $('custom').value.trim(); if (!isAddress(a)) return status('Not a valid address')

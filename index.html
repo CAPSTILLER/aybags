@@ -11,10 +11,10 @@
 <section class="card"><h2>Wallet</h2><button id="connect">Connect wallet (read-only)</button><div id="me" class="small"></div>
 <p class="small">Holder of #98 is capstiller.eth = 0x5559…4507 (not the Bankr wallet).</p></section>
 <section class="card"><h2>Deposit</h2><p class="small">Anyone can deposit. Sends from your connected wallet to the bag's wallet.</p>
-<label>Asset <select id="dAsset"></select></label><label>Amount <input id="dAmt" inputmode="decimal" placeholder="1"></label>
+<div class="lbl">Asset</div><div id="dAsset" class="picker" role="radiogroup"></div><label>Amount <input id="dAmt" inputmode="decimal" placeholder="1"></label>
 <button id="dep">Deposit</button><button id="cp" class="ghost">Checkpoint level</button></section>
 <section class="card"><h2>Withdraw</h2><p class="small">Only the current NFT holder can withdraw.</p>
-<label>Asset <select id="wAsset"></select></label><label>Amount <input id="wAmt" inputmode="decimal"></label>
+<div class="lbl">Asset</div><div id="wAsset" class="picker" role="radiogroup"></div><label>Amount <input id="wAmt" inputmode="decimal"></label>
 <label>To <input id="wTo" placeholder="defaults to your wallet"></label><button id="wd" disabled>Withdraw</button></section>
 <div id="status" class="status"></div>
 <section class="card"><h2>Send to play</h2><p class="small">Coming soon: your bag pays the game's entry fee by sending CAPH from its own wallet, and winnings come back to the bag.</p>
