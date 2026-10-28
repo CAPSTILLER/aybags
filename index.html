@@ -1,21 +1,20 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AYB Bag — independent wallet page</title>
 <link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="https://aybags.gearup.wtf/favicon-32.png">
-<link rel="apple-touch-icon" sizes="180x180" href="https://aybags.gearup.wtf/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#0b1020">
+<link rel="apple-touch-icon" sizes="180x180" href="https://aybags.gearup.wtf/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#eef1f8">
 <meta name="description" content="AYB Bag: see and manage your AYB NFT bag wallet on Base.">
 <meta property="og:type" content="website"><meta property="og:url" content="https://aybags.gearup.wtf/"><meta property="og:title" content="AYB Bag"><meta property="og:description" content="See and manage your AYB NFT bag wallet on Base."><meta property="og:image" content="https://aybags.gearup.wtf/og-image.png">
 <meta name="twitter:card" content="summary"><meta name="twitter:title" content="AYB Bag"><meta name="twitter:image" content="https://aybags.gearup.wtf/og-image.png">
 <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 <link rel="stylesheet" href="/src/style.css"></head><body>
-<header><h1>AYB Bag</h1><p class="sub">Your bag's wallet, read straight from Base. No AYB server needed.</p></header>
-<div class="warn"><b>Test with $1 first.</b> The bag's wallet code (BagAccount6551) is <b>not source-verified</b>. Our read of its bytecode shows only the NFT holder (or an agent the holder approves) can move funds, but that isn't proven. Never approve an agent you don't trust.</div>
+<header><div class="cage" aria-hidden="true"><i></i></div><h1>AYB Bag</h1><p class="tag">never happier</p><p class="sub">Your bag's wallet, read straight from Base. No AYB server needed.</p></header>
 <section class="card"><label>Bag token ID <input id="tid" type="number" min="0" value="98" inputmode="numeric"></label><button id="load">Load bag</button>
 <div id="info" class="info">Loading…</div><div id="mig"></div></section>
 <section class="card"><h2>Inside the bag</h2><div id="hold"></div>
 <label>Custom token address <input id="custom" placeholder="0x…"></label><button id="addTok" class="ghost">Add token</button></section>
 <section class="card"><h2>Wallet</h2><button id="connect">Connect wallet (read-only)</button><div id="me" class="small"></div>
 <p class="small">Holder of #98 is capstiller.eth = 0x5559…4507 (not the Bankr wallet).</p></section>
-<section class="card"><h2>Deposit</h2><p class="small">Anyone can deposit. Sends from your connected wallet to the bag's wallet.</p>
+<section class="card"><h2>Deposit</h2><p class="small">Anyone can deposit. Sends from your connected wallet to the bag's wallet. Try $1 first.</p>
 <div class="lbl">Asset</div><div id="dAsset" class="picker" role="radiogroup"></div><label>Amount <input id="dAmt" inputmode="decimal" placeholder="1"></label>
 <button id="dep">Deposit</button><button id="cp" class="ghost">Checkpoint level</button></section>
 <section class="card"><h2>Withdraw</h2><p class="small">Only the current NFT holder can withdraw.</p>

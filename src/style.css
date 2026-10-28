@@ -1,13 +1,44 @@
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#0b1020;color:#e8ecff;padding:12px;max-width:560px;margin:auto}
-h1{margin:4px 0;color:#4f8bff}h2{font-size:1.05rem;margin:0 0 8px}.sub,.small{font-size:.85rem;color:#9aa6c8}
-.card{background:#141b33;border-radius:14px;padding:14px;margin:12px 0}.warn{background:#3a2a05;border:1px solid #c9921a;border-radius:12px;padding:12px;font-size:.9rem}
-label{display:block;margin:8px 0;font-size:.9rem}input,select{width:100%;padding:12px;border-radius:10px;border:1px solid #2b355c;background:#0b1020;color:#fff;font-size:1rem;margin-top:4px}
-button{width:100%;padding:13px;margin-top:8px;border:0;border-radius:10px;background:#2f6bff;color:#fff;font-size:1rem;font-weight:600}button:disabled{opacity:.45}
-.ghost{background:#223056}.info div{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid #1f2847;font-size:.9rem;word-break:break-all}
-.tier{font-size:1.4rem;font-weight:800;padding:10px;border-radius:10px;text-align:center;margin:8px 0}.migwarn{background:#5a1010;padding:10px;border-radius:10px;margin-top:8px}
-.status{white-space:pre-wrap;font-size:.85rem;word-break:break-all}.model{height:180px;display:flex;align-items:center;justify-content:center;border:2px dashed #2b355c;border-radius:12px;color:#9aa6c8}
+/* Never Happier theme: white padded cell, blue tufted buttons, cage light */
+:root{--pad:#f4f6fb;--pad2:#e3e8f3;--seam:#c9d1e3;--tuft:#3d6ef5;--ink:#1d2340;--mute:#5b6485;--teal:#1fb7a6;--plum:#6b2fa8}
+*{box-sizing:border-box}
+html{background:var(--pad)}
+body{margin:0;font-family:"Trebuchet MS",system-ui,sans-serif;color:var(--ink);padding:12px;max-width:560px;margin:auto;min-height:100vh;
+background-color:var(--pad);
+background-image:radial-gradient(circle,var(--tuft) 0 3px,transparent 3.6px),
+ repeating-linear-gradient(45deg,transparent 0 33px,var(--seam) 33px 35px),
+ repeating-linear-gradient(-45deg,transparent 0 33px,var(--seam) 33px 35px),
+ radial-gradient(circle at 50% 0,#fff 0,transparent 70%);
+background-size:49.5px 49.5px,auto,auto,100% 600px;background-attachment:fixed;background-repeat:repeat,repeat,repeat,no-repeat}
+header{text-align:center;padding:8px 10px 10px;position:relative;background:radial-gradient(ellipse at 50% 40%,rgba(255,255,255,.97) 55%,rgba(255,255,255,0) 75%)}
+.cage{width:46px;height:52px;margin:0 auto 4px;border:3px solid #2a2f45;border-radius:14px 14px 22px 22px;position:relative;
+background:repeating-linear-gradient(90deg,transparent 0 8px,#2a2f45 8px 10px),radial-gradient(circle at 50% 55%,#fff 0 30%,#fff7d6 45%,transparent 75%);
+box-shadow:0 0 30px 14px rgba(255,255,255,.95),0 0 70px 20px rgba(255,244,200,.55)}
+.cage:before{content:"";position:absolute;left:50%;top:-14px;width:3px;height:11px;background:#2a2f45;transform:translateX(-50%)}
+h1{margin:4px 0 0;font-size:2rem;letter-spacing:.02em;color:var(--ink);text-shadow:0 2px 0 #fff}
+.tag{margin:0;font-size:.8rem;letter-spacing:.35em;text-transform:uppercase;color:var(--tuft);font-weight:700}
+h2{font-size:1.05rem;margin:0 0 8px;color:var(--ink)}
+.sub,.small{font-size:.85rem;color:var(--mute)}
+.card{background:linear-gradient(#ffffff,#f1f4fa);border:1px solid var(--seam);border-radius:22px;padding:16px;margin:14px 0;
+box-shadow:inset 0 2px 0 #fff,inset 0 -6px 12px rgba(160,172,205,.25),0 6px 16px rgba(40,55,110,.12);position:relative}
+.card:after{content:"";position:absolute;top:10px;right:12px;width:8px;height:8px;border-radius:50%;background:var(--tuft);box-shadow:0 1px 0 #fff}
+label{display:block;margin:8px 0;font-size:.9rem}
+input,select{width:100%;padding:12px;border-radius:12px;border:1px solid var(--seam);background:#fff;color:var(--ink);font-size:1rem;margin-top:4px;box-shadow:inset 0 2px 4px rgba(60,80,140,.1)}
+input:focus{outline:2px solid var(--tuft);outline-offset:1px}
+button{width:100%;padding:13px;margin-top:8px;border:0;border-radius:14px;background:linear-gradient(#5a86ff,var(--tuft));color:#fff;font-size:1rem;font-weight:700;
+box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 4px 0 #2a4fc0,0 6px 10px rgba(40,70,180,.25);touch-action:manipulation}
+button:active{transform:translateY(3px);box-shadow:inset 0 2px 0 rgba(255,255,255,.3),0 1px 0 #2a4fc0}
+button:disabled{opacity:.45}
+.ghost{background:#fff;color:var(--tuft);box-shadow:inset 0 0 0 2px var(--tuft),0 3px 0 var(--seam)}
+.info div{display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px dashed var(--seam);font-size:.9rem;word-break:break-all}
+.tier{font-size:1.4rem;font-weight:800;padding:10px;border-radius:14px;text-align:center;margin:8px 0;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6);box-shadow:inset 0 2px 0 rgba(255,255,255,.3)}
+.migwarn{background:#ffe3e3;color:#7a1010;border:1px solid #e08a8a;padding:10px;border-radius:12px;margin-top:8px}
+.status{white-space:pre-wrap;font-size:.85rem;word-break:break-all;background:rgba(255,255,255,.85);border-radius:12px;padding:0 8px}
+.model{height:180px;display:flex;align-items:center;justify-content:center;border:2px dashed var(--seam);border-radius:16px;color:var(--mute);background:#fff}
 footer{text-align:center;padding:20px 0}
-a{color:#8fb4ff}
-.lbl{font-size:.9rem;margin:8px 0 4px}.picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
-.opt{margin:0;padding:10px 6px;background:#0b1020;border:2px solid #2b355c;display:flex;flex-direction:column;align-items:center;gap:2px;touch-action:manipulation}
-.opt small{font-size:.7rem;color:#9aa6c8;font-weight:400;word-break:break-all}.opt.on{border-color:#4f8bff;background:#18295a}.opt.zero{opacity:.5}
+footer .small{background:rgba(255,255,255,.85);display:inline-block;padding:4px 10px;border-radius:10px}
+a{color:var(--plum);font-weight:600}
+.lbl{font-size:.9rem;margin:8px 0 4px}
+.picker{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.opt{margin:0;padding:10px 6px;background:#fff;color:var(--ink);border:2px solid var(--seam);box-shadow:0 3px 0 var(--seam);display:flex;flex-direction:column;align-items:center;gap:2px}
+.opt small{font-size:.7rem;color:var(--mute);font-weight:400;word-break:break-all}
+.opt.on{border-color:var(--teal);background:#e6faf7;box-shadow:0 3px 0 var(--teal)}.opt.zero{opacity:.5}
