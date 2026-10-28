@@ -133,3 +133,4 @@ $('load').onclick = load; $('addTok').onclick = addToken; $('connect').onclick =
 $('dep').onclick = deposit; $('cp').onclick = checkpoint; $('wd').onclick = withdraw
 eth()?.on?.('accountsChanged', (a: string[]) => { me = a[0] ? getAddress(a[0]) : null; updateWithdraw() })
 load()
+import './avatar'

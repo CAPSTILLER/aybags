@@ -5,7 +5,6 @@
 <meta name="description" content="AYB Bag: see and manage your AYB NFT bag wallet on Base.">
 <meta property="og:type" content="website"><meta property="og:url" content="https://aybags.gearup.wtf/"><meta property="og:title" content="AYB Bag"><meta property="og:description" content="See and manage your AYB NFT bag wallet on Base."><meta property="og:image" content="https://aybags.gearup.wtf/og-image.png">
 <meta name="twitter:card" content="summary"><meta name="twitter:title" content="AYB Bag"><meta name="twitter:image" content="https://aybags.gearup.wtf/og-image.png">
-<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 <link rel="stylesheet" href="/src/style.css"></head><body>
 <header><div class="cage" aria-hidden="true"><i></i></div><h1>AYB Bag</h1><p class="tag">never happier</p><p class="sub">Your bag's wallet, read straight from Base. No AYB server needed.</p></header>
 <section class="card"><label>Bag token ID <input id="tid" type="number" min="0" value="98" inputmode="numeric"></label><button id="load">Load bag</button>
@@ -21,9 +20,12 @@
 <div class="lbl">Asset</div><div id="wAsset" class="picker" role="radiogroup"></div><label>Amount <input id="wAmt" inputmode="decimal"></label>
 <label>To <input id="wTo" placeholder="defaults to your wallet"></label><button id="wd" disabled>Withdraw</button></section>
 <div id="status" class="status"></div>
-<section class="card"><h2>Send to play</h2><p class="small">Coming soon: your bag pays the game's entry fee by sending CAPH from its own wallet, and winnings come back to the bag.</p>
-<button disabled>Caphet Arena · coming soon</button><button disabled>Substrate · coming soon</button>
-<p class="small"><a href="https://arena.gearup.wtf" target="_blank" rel="noopener">arena.gearup.wtf</a></p></section>
-<section class="card"><h2>3D bag</h2><div id="model" class="model">Meshy model coming soon<!-- <model-viewer src="/bag.glb" camera-controls auto-rotate></model-viewer> --></div></section>
+<section class="card"><h2>3D avatar</h2><p class="small">Drag to spin, pinch to zoom. Tap an emote.</p>
+<div id="av" class="model"><canvas id="avc"></canvas><div id="avmsg" class="avmsg">Loading avatar…</div></div>
+<div id="emotes" class="chips"></div>
+<div class="avrow"><button id="avPause" class="ghost sm">⏸ Pause</button><button id="avShot" class="ghost sm">📸 PNG</button><label class="ghost sm filebtn">Load GLB<input id="avFile" type="file" accept=".glb,.gltf,model/gltf-binary" hidden></label></div>
+<label>Speed <span id="spdv">1.0×</span><input id="spd" type="range" min="0.1" max="2" step="0.1" value="1"></label>
+<label>Scrub<input id="scrub" type="range" min="0" max="1" step="0.001" value="0"></label>
+<p class="small">Your GLB stays on your device. Nothing is uploaded.</p></section>
 <footer><a href="https://landonthis.gearup.wtf" target="_blank" rel="noopener"><img src="/gear-logo-cutout.png" alt="GEAR" height="28"></a><p class="small">Independent page. Not affiliated with AYB. Reads public Base chain.</p></footer>
 <script type="module" src="/src/main.ts"></script></body></html>
