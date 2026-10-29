@@ -43,9 +43,8 @@ async function start() {
     else { const idle = clips.findIndex((c: any) => /idle|wave|hello/i.test(c.name)); play(clips[Math.max(0, idle)], em.children[Math.max(0, idle)]) }
     msg.textContent = ''; box.dataset.model = label; box.dataset.clips = String(clips.length)
   }
-  const load = (url: string, label: string) => { msg.textContent = 'Loading avatar…'; loader.load(url, g => show(g, label), undefined, e => { msg.textContent = 'Could not load: ' + (e as any)?.message }) }
-  load('/avatar.glb', 'default')
-  $('avFile').onchange = (e: any) => { const f = e.target.files?.[0]; if (!f) return; const u = URL.createObjectURL(f); loader.load(u, g => { show(g, f.name); URL.revokeObjectURL(u) }, undefined, () => { msg.textContent = 'That file did not load as a GLB.' }) }
+    msg.textContent = 'Load your avatar GLB'
+  $('avFile').onchange = (e: any) => { const f = e.target.files?.[0]; if (!f) return; const u = URL.createObjectURL(f); msg.textContent = 'Loading avatar…'; loader.load(u, g => { show(g, f.name); URL.revokeObjectURL(u) }, undefined, () => { msg.textContent = 'That file did not load as a GLB.' }) }
   $('spd').oninput = (e: any) => { speed = +e.target.value; $('spdv').textContent = speed.toFixed(1) + '×'; if (mixer && !paused) mixer.timeScale = speed }
   $('avPause').onclick = () => { paused = !paused; if (mixer) mixer.timeScale = paused ? 0 : speed; $('avPause').textContent = paused ? '▶ Play' : '⏸ Pause' }
   const sc = $('scrub')
